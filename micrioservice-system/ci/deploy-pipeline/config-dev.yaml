@@ -1,0 +1,10 @@
+# 开发环境覆盖
+kubernetes:
+  context: dev-cluster
+  namespace: dev
+
+health_check:
+  timeout: 60
+
+notify:
+  enabled: false

@@ -1,0 +1,59 @@
+# 构建流水线配置
+project:
+  name: microservice-system
+  base_path: /workspace/micrioservice-system
+
+# Maven构建配置
+maven:
+  settings_path: /opt/maven/settings.xml
+  profiles: prod
+  jvm_opts: "-Xmx2g -XX:MaxPermSize=512m"
+
+# Docker镜像构建配置
+docker:
+  registry: registry.corp.com
+  harbor_url: https://harbor.corp.com
+  harbor_username: ci-bot
+  harbor_password: ENC(harbor_password)
+  build_context: .
+  dockerfile_template: Dockerfile.tmpl
+
+# 镜像安全扫描
+scan:
+  enabled: true
+  max_severity: High
+  fail_on_critical: true
+
+# 构建产物
+artifacts:
+  upload_to_nexus: true
+  nexus_url: https://nexus.corp.com/repository/maven-releases/
+
+# 通知
+notify:
+  enabled: true
+  webhook_type: dingtalk
+  webhook_url: https://oapi.dingtalk.com/robot/send?access_token=xxxxx
+
+# 微服务清单
+services:
+  - name: user-service
+    module: user-module/user-service
+    image_name: user/user-service
+    has_dockerfile: true
+  - name: user-auth-service
+    module: user-module/user-auth-service
+    image_name: user/user-auth-service
+    has_dockerfile: true
+  - name: order-service
+    module: order-module/order-service
+    image_name: order/order-service
+    has_dockerfile: true
+  - name: order-payment-service
+    module: order-module/order-payment-service
+    image_name: order/order-payment-service
+    has_dockerfile: true
+  - name: product-service
+    module: product-module/product-service
+    image_name: product/product-service
+    has_dockerfile: true

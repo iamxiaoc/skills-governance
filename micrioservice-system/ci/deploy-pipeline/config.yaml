@@ -1,0 +1,74 @@
+# 发布流水线配置
+project:
+  name: microservice-system
+  base_path: /workspace/micrioservice-system
+
+# Kubernetes配置
+kubernetes:
+  kubeconfig_path: /root/.kube/config
+  context: prod-cluster
+  namespace: prod
+  timeout: 300
+
+# Helm配置
+helm:
+  binary_path: /usr/local/bin/helm
+  chart_base_path: /workspace/micrioservice-system
+
+# 镜像仓库
+registry:
+  harbor_url: https://harbor.corp.com
+  harbor_username: ci-bot
+  harbor_password: ENC(harbor_password)
+
+# 健康检查
+health_check:
+  enabled: true
+  check_path: /actuator/health
+  timeout: 180
+  interval: 5
+
+# 回滚配置
+rollback:
+  enabled: true
+  max_revisions: 5
+
+# 通知
+notify:
+  enabled: true
+  webhook_type: dingtalk
+  webhook_url: https://oapi.dingtalk.com/robot/send?access_token=xxxxx
+
+# 部署模块清单
+deployments:
+  - module: user-module
+    chart_path: user-module/user-module-chart
+    release_name: user-module
+    services:
+      - name: user-service
+        image_name: user/user-service
+      - name: user-auth-service
+        image_name: user/user-auth-service
+    values_files:
+      - values.yaml
+      - values-prod.yaml
+  - module: order-module
+    chart_path: order-module/order-module-chart
+    release_name: order-module
+    services:
+      - name: order-service
+        image_name: order/order-service
+      - name: order-payment-service
+        image_name: order/order-payment-service
+    values_files:
+      - values.yaml
+      - values-prod.yaml
+  - module: product-module
+    chart_path: product-module/product-module-chart
+    release_name: product-module
+    services:
+      - name: product-service
+        image_name: product/product-service
+    values_files:
+      - values.yaml
+      - values-prod.yaml

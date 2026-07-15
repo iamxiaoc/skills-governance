@@ -1,0 +1,12 @@
+# 开发环境覆盖
+docker:
+  registry: registry-dev.corp.com
+  harbor_url: https://harbor-dev.corp.com
+  harbor_username: ci-bot-dev
+  harbor_password: ENC(dev_harbor_password)
+
+scan:
+  enabled: false
+
+notify:
+  enabled: false
