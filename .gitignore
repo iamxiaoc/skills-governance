@@ -1,0 +1,19 @@
+# Compiled class files
+target/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+
+# Maven
+*.jar
+*.war
+*.ear
+
+# Logs
+*.log

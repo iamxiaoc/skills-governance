@@ -1,0 +1,46 @@
+{{- if .Values.orderService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.orderService.name }}-log-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "order-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.orderService.name }}
+    app.kubernetes.io/config-type: log
+data:
+  log4j2.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Configuration status="WARN" monitorInterval="30">
+        <Appenders>
+            <Console name="Console" target="SYSTEM_OUT">
+                <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            </Console>
+            <RollingFile name="RollingFile" fileName="${sys:LOG_PATH}/order-service.log"
+                         filePattern="${sys:LOG_PATH}/order-service-%d{yyyy-MM-dd}-%i.log.gz">
+                <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+                <Policies>
+                    <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                    <SizeBasedTriggeringPolicy size="100MB"/>
+                </Policies>
+                <DefaultRolloverStrategy max="30"/>
+            </RollingFile>
+        </Appenders>
+        <Loggers>
+            <Logger name="com.corp" level="INFO"/>
+            <Logger name="com.corp.order" level="DEBUG"/>
+            <Root level="INFO">
+                <AppenderRef ref="Console"/>
+                <AppenderRef ref="RollingFile"/>
+            </Root>
+        </Loggers>
+    </Configuration>
+  log.properties: |
+    # 日志配置
+    log.path=/app/logs
+    log.level=INFO
+    log.maxFileSize=100MB
+    log.maxHistory=30
+    log.totalSizeCap=10GB
+    log.pattern=%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n
+{{- end }}

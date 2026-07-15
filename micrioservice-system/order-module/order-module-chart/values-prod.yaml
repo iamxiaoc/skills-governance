@@ -1,0 +1,81 @@
+global:
+  namespace: prod
+  imageRegistry: registry.corp.com
+  imagePullPolicy: IfNotPresent
+
+common:
+  replicas: 4
+
+orderService:
+  replicaCount: 6
+  image:
+    tag: "1.0.0"
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  env:
+    - name: JAVA_OPTS
+      value: "-Xms1g -Xmx3g -Dfile.encoding=UTF-8 -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+    - name: SPRING_PROFILES_ACTIVE
+      value: "prod"
+  config:
+    db:
+      url: "jdbc:mysql://mysql-prod.default.svc.cluster.local:3306/order_db?useSSL=true&characterEncoding=utf8"
+      username: "order_app_prod"
+      password: "ENC(zzzzz)"
+      slaveUrl: "jdbc:mysql://mysql-slave-prod.default.svc.cluster.local:3306/order_db?useSSL=true&characterEncoding=utf8"
+      slaveUsername: "order_app_prod_read"
+      slavePassword: "ENC(zzzzz)"
+    redis:
+      nodes: "redis-prod.default.svc.cluster.local:6379"
+    mq:
+      namesrv: "rocketmq-prod.default.svc.cluster.local:9876"
+    protection:
+      enabled: true
+      cpuThreshold: 75
+      memoryThreshold: 80
+      globalQps: 15000
+      perIpQps: 300
+      perUserQps: 150
+
+orderPaymentService:
+  replicaCount: 4
+  resources:
+    limits:
+      cpu: 1500m
+      memory: 2Gi
+    requests:
+      cpu: 300m
+      memory: 512Mi
+  config:
+    db:
+      url: "jdbc:mysql://mysql-prod.default.svc.cluster.local:3306/order_db?useSSL=true&characterEncoding=utf8"
+      username: "order_app_prod"
+      password: "ENC(zzzzz)"
+    alipay:
+      appId: "2021000prod_xxxxx"
+      privateKey: "ENC(zzzzz)"
+      publicKey: "ENC(zzzzz)"
+      gateway: "https://openapi.alipay.com/gateway.do"
+    protection:
+      enabled: true
+      cpuThreshold: 75
+      memoryThreshold: 80
+      globalQps: 5000
+      perIpQps: 150
+      perUserQps: 80
+
+hpa:
+  enabled: true
+  orderService:
+    minReplicas: 6
+    maxReplicas: 30
+    targetCPUUtilizationPercentage: 60
+  orderPaymentService:
+    minReplicas: 4
+    maxReplicas: 15
+    targetCPUUtilizationPercentage: 65

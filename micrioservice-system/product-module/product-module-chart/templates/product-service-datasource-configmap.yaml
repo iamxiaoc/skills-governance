@@ -1,0 +1,46 @@
+{{- if .Values.productService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.productService.name }}-datasource-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "product-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.productService.name }}
+    app.kubernetes.io/config-type: datasource
+data:
+  datasource.properties: |
+    # 数据源连接池配置（魔改HikariCP）
+    pool.name=ProductDataSource
+    pool.maximum-pool-size=100
+    pool.minimum-idle=10
+    pool.connection-timeout=30000
+    pool.idle-timeout=600000
+    pool.max-lifetime=1800000
+    pool.connection-test-query=SELECT 1
+    monitor.slow-sql-threshold-millis=500
+    monitor.log-slow-sql=true
+  redis.properties: |
+    # Redis配置
+    redis.cluster.nodes={{ .Values.productService.config.redis.nodes }}
+    redis.timeout=3000
+    redis.maxAttempts=3
+    redis.maxIdle=50
+    redis.minIdle=10
+    redis.maxTotal=200
+    redis.maxWaitMillis=3000
+    redis.testOnBorrow=true
+    redis.testWhileIdle=true
+  es.properties: |
+    # Elasticsearch配置
+    es.hosts={{ .Values.productService.config.es.hosts }}
+    es.username={{ .Values.productService.config.es.username }}
+    es.password={{ .Values.productService.config.es.password }}
+    es.index.product=product_index
+    es.index.alias=product_alias
+    es.connect-timeout=5000
+    es.socket-timeout=30000
+    es.max-result-window=10000
+    es.search.default-page-size=20
+    es.search.max-page-size=100
+{{- end }}

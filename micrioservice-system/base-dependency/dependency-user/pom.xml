@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        ============================================================
+        dependency-user 用户模块父 POM
+        ============================================================
+        职责：
+          1. 作为用户中心相关微服务的父 POM
+          2. 通过 dependencyManagement 管理用户模块特有依赖版本
+             （JWT、Spring Security 等）
+          3. 通过 dependencies 提供用户模块微服务共同需要的基础依赖
+             （base-common / base-crypto / base-security）
+        说明：
+          - 继承自 dependency-public，复用公共依赖与版本管理
+        ============================================================
+    -->
+
+    <parent>
+        <groupId>com.corp.dependency</groupId>
+        <artifactId>dependency-public</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../dependency-public/pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.corp.dependency</groupId>
+    <artifactId>dependency-user</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>dependency-user</name>
+    <description>用户模块微服务父 POM，管理用户中心特有依赖</description>
+
+    <properties>
+        <!-- 用户模块特有版本 -->
+        <jjwt.version>0.11.5</jjwt.version>
+        <spring-security.version>6.1.5</spring-security.version>
+    </properties>
+
+    <!-- 用户模块特有依赖版本管理 -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- JJWT 三件套：API + 实现 + Jackson 序列化 -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+
+            <!-- Spring Security -->
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-web</artifactId>
+                <version>${spring-security.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-config</artifactId>
+                <version>${spring-security.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- 用户模块微服务共同需要的依赖 -->
+    <dependencies>
+        <!-- 通用基础 -->
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-common</artifactId>
+        </dependency>
+        <!-- 加解密工具 -->
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-crypto</artifactId>
+        </dependency>
+        <!-- 安全框架封装 -->
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-security</artifactId>
+        </dependency>
+        <!-- 分布式ID生成器二方件 -->
+        <dependency>
+            <groupId>com.corp.id</groupId>
+            <artifactId>corp-id-generator</artifactId>
+        </dependency>
+        <!-- 配置中心客户端二方件 -->
+        <dependency>
+            <groupId>com.corp.config</groupId>
+            <artifactId>corp-config-client</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

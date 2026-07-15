@@ -1,0 +1,45 @@
+{{- if .Values.orderService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.orderService.name }}-app-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "order-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.orderService.name }}
+    app.kubernetes.io/config-type: app
+data:
+  application.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <config>
+        <app name="order-service" version="1.0.0">
+            <server port="{{ .Values.orderService.service.targetPort }}" context-path="/order-service"/>
+            <thread-pool core="50" max="500" queue="2000"/>
+        </app>
+        <datasource>
+            <master url="{{ .Values.orderService.config.db.url }}" username="{{ .Values.orderService.config.db.username }}" password="{{ .Values.orderService.config.db.password }}"
+                    driver="com.mysql.cj.jdbc.Driver"
+                    initialSize="10" maxActive="100" minIdle="10" maxWait="60000"/>
+            <slave url="{{ .Values.orderService.config.db.slaveUrl }}" username="{{ .Values.orderService.config.db.slaveUsername }}" password="{{ .Values.orderService.config.db.slavePassword }}"
+                   driver="com.mysql.cj.jdbc.Driver"
+                   initialSize="5" maxActive="50" minIdle="5" maxWait="60000"/>
+        </datasource>
+        <redis>
+            <cluster nodes="{{ .Values.orderService.config.redis.nodes }}" timeout="3000" maxAttempts="3"/>
+        </redis>
+        <mq>
+            <rocketmq namesrv="{{ .Values.orderService.config.mq.namesrv }}" producerGroup="order-producer-group">
+                <topic name="order-create" writeQueueNums="8" readQueueNums="8"/>
+                <topic name="order-status-change" writeQueueNums="4" readQueueNums="4"/>
+            </rocketmq>
+        </mq>
+        <sharding>
+            <rule table="t_order" dbCount="4" tableCount="8" shardingKey="order_id"/>
+            <rule table="t_order_item" dbCount="4" tableCount="8" shardingKey="order_id"/>
+        </sharding>
+        <mybatis>
+            <mapper-locations>classpath:mapper/*.xml</mapper-locations>
+            <config-location>classpath:mybatis-config.xml</config-location>
+        </mybatis>
+    </config>
+{{- end }}

@@ -1,0 +1,59 @@
+global:
+  namespace: dev
+  imageRegistry: registry-dev.corp.com
+  imagePullPolicy: Always
+
+common:
+  replicas: 1
+
+productService:
+  replicaCount: 1
+  image:
+    tag: "1.0.0-SNAPSHOT"
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  env:
+    - name: JAVA_OPTS
+      value: "-Xms128m -Xmx256m -Dfile.encoding=UTF-8"
+    - name: SPRING_PROFILES_ACTIVE
+      value: "dev"
+  config:
+    db:
+      url: "jdbc:mysql://mysql-dev.default.svc.cluster.local:3306/product_db?useSSL=false&characterEncoding=utf8"
+      username: "product_app_dev"
+      password: "ENC(yyyyy)"
+    redis:
+      nodes: "redis-dev.default.svc.cluster.local:6379"
+    es:
+      hosts: "https://es-dev.default.svc.cluster.local:9200"
+      username: "elastic"
+      password: "ENC(yyyyy)"
+    oss:
+      endpoint: "http://minio-dev.default.svc.cluster.local:9000"
+      accessKey: "product_access_key_dev"
+      secretKey: "ENC(yyyyy)"
+    protection:
+      enabled: false
+      cpuThreshold: 90
+      memoryThreshold: 90
+      globalQps: 20000
+      perIpQps: 1000
+      perUserQps: 500
+
+hpa:
+  enabled: false
+
+ingress:
+  enabled: true
+  hosts:
+    - host: product-api.dev.corp.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: product-service
+          servicePort: 8080

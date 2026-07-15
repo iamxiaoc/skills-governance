@@ -1,0 +1,53 @@
+global:
+  namespace: prod
+  imageRegistry: registry.corp.com
+  imagePullPolicy: IfNotPresent
+
+common:
+  replicas: 4
+
+productService:
+  replicaCount: 5
+  image:
+    tag: "1.0.0"
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  env:
+    - name: JAVA_OPTS
+      value: "-Xms1g -Xmx3g -Dfile.encoding=UTF-8 -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+    - name: SPRING_PROFILES_ACTIVE
+      value: "prod"
+  config:
+    db:
+      url: "jdbc:mysql://mysql-prod.default.svc.cluster.local:3306/product_db?useSSL=true&characterEncoding=utf8"
+      username: "product_app_prod"
+      password: "ENC(zzzzz)"
+    redis:
+      nodes: "redis-prod.default.svc.cluster.local:6379"
+    es:
+      hosts: "https://es-prod.default.svc.cluster.local:9200"
+      username: "elastic"
+      password: "ENC(zzzzz)"
+    oss:
+      endpoint: "http://minio-prod.default.svc.cluster.local:9000"
+      accessKey: "product_access_key_prod"
+      secretKey: "ENC(zzzzz)"
+    protection:
+      enabled: true
+      cpuThreshold: 75
+      memoryThreshold: 80
+      globalQps: 12000
+      perIpQps: 300
+      perUserQps: 150
+
+hpa:
+  enabled: true
+  productService:
+    minReplicas: 5
+    maxReplicas: 25
+    targetCPUUtilizationPercentage: 60

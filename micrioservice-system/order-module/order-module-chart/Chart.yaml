@@ -1,0 +1,12 @@
+apiVersion: v2
+name: order-module-chart
+description: 订单模块Helm Chart，包含order-service和order-payment-service两个微服务
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - order
+  - payment
+  - microservice
+maintainers:
+  - name: corp-team

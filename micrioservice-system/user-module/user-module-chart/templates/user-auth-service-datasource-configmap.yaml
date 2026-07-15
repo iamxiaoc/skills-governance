@@ -1,0 +1,23 @@
+{{- if .Values.userAuthService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.userAuthService.name }}-datasource-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "user-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.userAuthService.name }}
+    app.kubernetes.io/config-type: datasource
+data:
+  redis.properties: |
+    # Redis配置
+    redis.cluster.nodes={{ .Values.userAuthService.config.redis.nodes }}
+    redis.timeout=3000
+    redis.maxAttempts=3
+    redis.maxIdle=30
+    redis.minIdle=5
+    redis.maxTotal=100
+    redis.maxWaitMillis=3000
+    redis.testOnBorrow=true
+    redis.testWhileIdle=true
+{{- end }}

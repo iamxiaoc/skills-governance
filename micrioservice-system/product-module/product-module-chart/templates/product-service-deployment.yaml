@@ -1,0 +1,104 @@
+{{- if .Values.productService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.productService.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "product-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.productService.name }}
+spec:
+  replicas: {{ .Values.productService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.productService.name }}
+      {{- include "product-module.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.productService.name }}
+        {{- include "product-module.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.productService.name }}
+          image: {{ include "product-module.image" .Values.productService.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.productService.service.targetPort }}
+              protocol: TCP
+          {{- with .Values.productService.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: app-config-volume
+              mountPath: {{ .Values.productService.configMountPath }}/application.xml
+              subPath: application.xml
+              readOnly: true
+            - name: datasource-config-volume
+              mountPath: {{ .Values.productService.configMountPath }}/datasource.properties
+              subPath: datasource.properties
+              readOnly: true
+            - name: datasource-config-volume
+              mountPath: {{ .Values.productService.configMountPath }}/redis.properties
+              subPath: redis.properties
+              readOnly: true
+            - name: datasource-config-volume
+              mountPath: {{ .Values.productService.configMountPath }}/es.properties
+              subPath: es.properties
+              readOnly: true
+            - name: log-config-volume
+              mountPath: {{ .Values.productService.configMountPath }}/log4j2.xml
+              subPath: log4j2.xml
+              readOnly: true
+            - name: log-config-volume
+              mountPath: {{ .Values.productService.configMountPath }}/log.properties
+              subPath: log.properties
+              readOnly: true
+            - name: api-config-volume
+              mountPath: {{ .Values.productService.configMountPath }}/api-exposure.xml
+              subPath: api-exposure.xml
+              readOnly: true
+            - name: protection-config-volume
+              mountPath: {{ .Values.productService.configMountPath }}/overload-protection.json
+              subPath: overload-protection.json
+              readOnly: true
+            - name: protection-config-volume
+              mountPath: {{ .Values.productService.configMountPath }}/cache.properties
+              subPath: cache.properties
+              readOnly: true
+          {{- if .Values.common.healthCheck.enabled }}
+          livenessProbe:
+            {{- toYaml .Values.common.healthCheck.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.common.healthCheck.readinessProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.productService.resources | nindent 12 }}
+      volumes:
+        - name: app-config-volume
+          configMap:
+            name: {{ .Values.productService.name }}-app-config
+            defaultMode: 0644
+        - name: datasource-config-volume
+          configMap:
+            name: {{ .Values.productService.name }}-datasource-config
+            defaultMode: 0644
+        - name: log-config-volume
+          configMap:
+            name: {{ .Values.productService.name }}-log-config
+            defaultMode: 0644
+        - name: api-config-volume
+          configMap:
+            name: {{ .Values.productService.name }}-api-config
+            defaultMode: 0644
+        - name: protection-config-volume
+          configMap:
+            name: {{ .Values.productService.name }}-protection-config
+            defaultMode: 0644
+{{- end }}

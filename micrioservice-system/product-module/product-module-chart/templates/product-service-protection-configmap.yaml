@@ -1,0 +1,52 @@
+{{- if .Values.productService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.productService.name }}-protection-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "product-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.productService.name }}
+    app.kubernetes.io/config-type: protection
+data:
+  overload-protection.json: |
+    {
+      "overloadProtection": {
+        "enabled": {{ .Values.productService.config.protection.enabled }},
+        "cpu": {
+          "threshold": {{ .Values.productService.config.protection.cpuThreshold }},
+          "rejectAction": "reject"
+        },
+        "memory": {
+          "threshold": {{ .Values.productService.config.protection.memoryThreshold }},
+          "rejectAction": "reject"
+        },
+        "rateLimit": {
+          "globalQps": {{ .Values.productService.config.protection.globalQps }},
+          "perIpQps": {{ .Values.productService.config.protection.perIpQps }},
+          "perUserQps": {{ .Values.productService.config.protection.perUserQps }}
+        },
+        "circuitBreaker": {
+          "enabled": true,
+          "failureThreshold": 80,
+          "failureRateThreshold": 0.5,
+          "waitDurationInOpenState": 30,
+          "slidingWindowSize": 150
+        },
+        "bulkhead": {
+          "enabled": true,
+          "maxConcurrentCalls": 500,
+          "maxWaitDuration": 5
+        }
+      }
+    }
+  cache.properties: |
+    # 本地缓存配置（魔改Caffeine）
+    cache.spec.maximumSize=10000
+    cache.spec.expireAfterWrite=300
+    cache.spec.expireAfterAccess=600
+    # 分布式锁配置
+    lock.timeout=30000
+    lock.waitTime=5000
+    lock.leaseTime=30000
+{{- end }}

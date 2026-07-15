@@ -1,0 +1,20 @@
+{{- if .Values.userAuthService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.userAuthService.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "user-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.userAuthService.name }}
+spec:
+  type: {{ .Values.userAuthService.service.type }}
+  ports:
+    - port: {{ .Values.userAuthService.service.port }}
+      targetPort: {{ .Values.userAuthService.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Values.userAuthService.name }}
+    {{- include "user-module.selectorLabels" . | nindent 4 }}
+{{- end }}

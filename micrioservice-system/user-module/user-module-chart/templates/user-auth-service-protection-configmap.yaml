@@ -1,0 +1,52 @@
+{{- if .Values.userAuthService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.userAuthService.name }}-protection-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "user-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.userAuthService.name }}
+    app.kubernetes.io/config-type: protection
+data:
+  overload-protection.json: |
+    {
+      "overloadProtection": {
+        "enabled": {{ .Values.userAuthService.config.protection.enabled }},
+        "cpu": {
+          "threshold": {{ .Values.userAuthService.config.protection.cpuThreshold }},
+          "rejectAction": "reject"
+        },
+        "memory": {
+          "threshold": {{ .Values.userAuthService.config.protection.memoryThreshold }},
+          "rejectAction": "reject"
+        },
+        "rateLimit": {
+          "globalQps": {{ .Values.userAuthService.config.protection.globalQps }},
+          "perIpQps": {{ .Values.userAuthService.config.protection.perIpQps }},
+          "perUserQps": {{ .Values.userAuthService.config.protection.perUserQps }}
+        },
+        "circuitBreaker": {
+          "enabled": true,
+          "failureThreshold": 30,
+          "failureRateThreshold": 0.5,
+          "waitDurationInOpenState": 30,
+          "slidingWindowSize": 60
+        },
+        "bulkhead": {
+          "enabled": true,
+          "maxConcurrentCalls": 100,
+          "maxWaitDuration": 5
+        }
+      }
+    }
+  auth.properties: |
+    # 认证服务配置
+    auth.token-header=Authorization
+    auth.token-prefix=Bearer
+    auth.login-max-retry={{ .Values.userAuthService.config.auth.loginMaxRetry }}
+    auth.lock-duration={{ .Values.userAuthService.config.auth.lockDuration }}
+    auth.captcha.enabled={{ .Values.userAuthService.config.auth.captchaEnabled }}
+    auth.captcha.length=4
+    auth.captcha.expire=300
+{{- end }}

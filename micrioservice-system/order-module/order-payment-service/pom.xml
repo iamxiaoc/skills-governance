@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.corp.dependency</groupId>
+        <artifactId>dependency-order</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../../base-dependency/dependency-order/pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.corp.order</groupId>
+    <artifactId>order-payment-service</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <description>支付微服务</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.corp.order</groupId>
+            <artifactId>order-framework</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-crypto</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-security</artifactId>
+        </dependency>
+        <!-- FIXME: 该依赖未通过base-dependency统一管理，微服务直接在pom中引入并自定义了版本号，存在版本不一致风险 -->
+        <dependency>
+            <groupId>com.alipay.sdk</groupId>
+            <artifactId>alipay-sdk-java</artifactId>
+            <version>4.38.61.ALL</version>
+        </dependency>
+    </dependencies>
+</project>

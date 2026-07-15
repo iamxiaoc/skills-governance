@@ -1,0 +1,67 @@
+{{- if .Values.orderService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.orderService.name }}-datasource-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "order-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.orderService.name }}
+    app.kubernetes.io/config-type: datasource
+data:
+  datasource.properties: |
+    # 数据源连接池配置（魔改HikariCP - 主库）
+    pool.name=OrderMasterDataSource
+    pool.maximum-pool-size=100
+    pool.minimum-idle=10
+    pool.connection-timeout=30000
+    pool.idle-timeout=600000
+    pool.max-lifetime=1800000
+    pool.connection-test-query=SELECT 1
+    monitor.slow-sql-threshold-millis=500
+    monitor.log-slow-sql=true
+    # 从库
+    slave.pool.name=OrderSlaveDataSource
+    slave.pool.maximum-pool-size=50
+    slave.pool.minimum-idle=5
+  redis.properties: |
+    # Redis配置
+    redis.cluster.nodes={{ .Values.orderService.config.redis.nodes }}
+    redis.timeout=3000
+    redis.maxAttempts=3
+    redis.maxIdle=50
+    redis.minIdle=10
+    redis.maxTotal=200
+    redis.maxWaitMillis=3000
+    redis.testOnBorrow=true
+    redis.testWhileIdle=true
+  mq.properties: |
+    # RocketMQ配置
+    rocketmq.producer.group=order-producer-group
+    rocketmq.producer.send-message-timeout=3000
+    rocketmq.producer.retry-times-when-send-failed=2
+    rocketmq.producer.compress-message-body-threshold=4096
+    # 消费者配置
+    rocketmq.consumer.group=order-consumer-group
+    rocketmq.consumer.topic=order-create,order-status-change
+    rocketmq.consumer.consume-thread-min=20
+    rocketmq.consumer.consume-thread-max=64
+  sharding.json: |
+    {
+      "sharding": {
+        "tables": {
+          "t_order": {
+            "actualDataNodes": "ds_${0..3}.t_order_${0..7}",
+            "databaseStrategy": {
+              "shardingColumn": "order_id",
+              "algorithmExpression": "ds_${order_id % 4}"
+            },
+            "tableStrategy": {
+              "shardingColumn": "order_id",
+              "algorithmExpression": "t_order_${order_id % 8}"
+            }
+          }
+        }
+      }
+    }
+{{- end }}

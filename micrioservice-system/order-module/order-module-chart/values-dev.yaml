@@ -1,0 +1,89 @@
+global:
+  namespace: dev
+  imageRegistry: registry-dev.corp.com
+  imagePullPolicy: Always
+
+common:
+  replicas: 1
+
+orderService:
+  replicaCount: 1
+  image:
+    tag: "1.0.0-SNAPSHOT"
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  env:
+    - name: JAVA_OPTS
+      value: "-Xms128m -Xmx256m -Dfile.encoding=UTF-8"
+    - name: SPRING_PROFILES_ACTIVE
+      value: "dev"
+  config:
+    db:
+      url: "jdbc:mysql://mysql-dev.default.svc.cluster.local:3306/order_db?useSSL=false&characterEncoding=utf8"
+      username: "order_app_dev"
+      password: "ENC(yyyyy)"
+      slaveUrl: "jdbc:mysql://mysql-slave-dev.default.svc.cluster.local:3306/order_db?useSSL=false&characterEncoding=utf8"
+      slaveUsername: "order_app_dev_read"
+      slavePassword: "ENC(yyyyy)"
+    redis:
+      nodes: "redis-dev.default.svc.cluster.local:6379"
+    mq:
+      namesrv: "rocketmq-dev.default.svc.cluster.local:9876"
+    protection:
+      enabled: false
+      cpuThreshold: 90
+      memoryThreshold: 90
+      globalQps: 20000
+      perIpQps: 1000
+      perUserQps: 500
+
+orderPaymentService:
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  config:
+    db:
+      url: "jdbc:mysql://mysql-dev.default.svc.cluster.local:3306/order_db?useSSL=false&characterEncoding=utf8"
+      username: "order_app_dev"
+      password: "ENC(yyyyy)"
+    alipay:
+      appId: "2021000dev_xxxxx"
+      privateKey: "ENC(yyyyy)"
+      publicKey: "ENC(yyyyy)"
+      gateway: "https://openapi-sandbox.dl.alipaydev.com/gateway.do"
+    protection:
+      enabled: false
+      cpuThreshold: 90
+      memoryThreshold: 90
+      globalQps: 10000
+      perIpQps: 500
+      perUserQps: 200
+
+hpa:
+  enabled: false
+
+ingress:
+  enabled: true
+  hosts:
+    - host: order-api.dev.corp.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: order-service
+          servicePort: 8080
+    - host: payment-api.dev.corp.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: order-payment-service
+          servicePort: 8082

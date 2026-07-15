@@ -1,0 +1,101 @@
+{{- if .Values.userService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.userService.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "user-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.userService.name }}
+spec:
+  replicas: {{ .Values.userService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.userService.name }}
+      {{- include "user-module.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.userService.name }}
+        {{- include "user-module.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.userService.name }}
+          image: {{ include "user-module.image" .Values.userService.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.userService.service.targetPort }}
+              protocol: TCP
+          {{- with .Values.userService.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          # 挂载多个独立configmap到配置目录，覆盖jar内默认配置
+          volumeMounts:
+            - name: app-config-volume
+              mountPath: {{ .Values.userService.configMountPath }}/application.xml
+              subPath: application.xml
+              readOnly: true
+            - name: datasource-config-volume
+              mountPath: {{ .Values.userService.configMountPath }}/datasource.properties
+              subPath: datasource.properties
+              readOnly: true
+            - name: datasource-config-volume
+              mountPath: {{ .Values.userService.configMountPath }}/redis.properties
+              subPath: redis.properties
+              readOnly: true
+            - name: log-config-volume
+              mountPath: {{ .Values.userService.configMountPath }}/log4j2.xml
+              subPath: log4j2.xml
+              readOnly: true
+            - name: log-config-volume
+              mountPath: {{ .Values.userService.configMountPath }}/log.properties
+              subPath: log.properties
+              readOnly: true
+            - name: api-config-volume
+              mountPath: {{ .Values.userService.configMountPath }}/api-exposure.xml
+              subPath: api-exposure.xml
+              readOnly: true
+            - name: protection-config-volume
+              mountPath: {{ .Values.userService.configMountPath }}/overload-protection.json
+              subPath: overload-protection.json
+              readOnly: true
+            - name: protection-config-volume
+              mountPath: {{ .Values.userService.configMountPath }}/security.json
+              subPath: security.json
+              readOnly: true
+          {{- if .Values.common.healthCheck.enabled }}
+          livenessProbe:
+            {{- toYaml .Values.common.healthCheck.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.common.healthCheck.readinessProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.userService.resources | nindent 12 }}
+      volumes:
+        - name: app-config-volume
+          configMap:
+            name: {{ .Values.userService.name }}-app-config
+            defaultMode: 0644
+        - name: datasource-config-volume
+          configMap:
+            name: {{ .Values.userService.name }}-datasource-config
+            defaultMode: 0644
+        - name: log-config-volume
+          configMap:
+            name: {{ .Values.userService.name }}-log-config
+            defaultMode: 0644
+        - name: api-config-volume
+          configMap:
+            name: {{ .Values.userService.name }}-api-config
+            defaultMode: 0644
+        - name: protection-config-volume
+          configMap:
+            name: {{ .Values.userService.name }}-protection-config
+            defaultMode: 0644
+{{- end }}

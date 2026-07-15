@@ -1,0 +1,43 @@
+{{- if .Values.orderPaymentService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.orderPaymentService.name }}-app-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "order-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.orderPaymentService.name }}
+    app.kubernetes.io/config-type: app
+data:
+  application.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <config>
+        <app name="order-payment-service" version="1.0.0">
+            <server port="{{ .Values.orderPaymentService.service.targetPort }}" context-path="/order-payment-service"/>
+            <thread-pool core="20" max="200" queue="1000"/>
+        </app>
+        <datasource>
+            <master url="{{ .Values.orderPaymentService.config.db.url }}" username="{{ .Values.orderPaymentService.config.db.username }}" password="{{ .Values.orderPaymentService.config.db.password }}"
+                    driver="com.mysql.cj.jdbc.Driver"
+                    initialSize="5" maxActive="50" minIdle="5" maxWait="60000"/>
+        </datasource>
+        <payment>
+            <alipay>
+                <appId>{{ .Values.orderPaymentService.config.alipay.appId }}</appId>
+                <privateKey>{{ .Values.orderPaymentService.config.alipay.privateKey }}</privateKey>
+                <publicKey>{{ .Values.orderPaymentService.config.alipay.publicKey }}</publicKey>
+                <gateway>{{ .Values.orderPaymentService.config.alipay.gateway }}</gateway>
+                <charset>UTF-8</charset>
+                <signType>RSA2</signType>
+            </alipay>
+            <callback>
+                <notifyUrl>https://api.corp.com/payment/alipay/notify</notifyUrl>
+                <returnUrl>https://www.corp.com/payment/result</returnUrl>
+            </callback>
+        </payment>
+        <crypto>
+            <rsa public-key-path="/app/keys/rsa-public.pem"
+                 private-key-path="/app/keys/rsa-private.pem"/>
+        </crypto>
+    </config>
+{{- end }}

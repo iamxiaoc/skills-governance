@@ -1,0 +1,104 @@
+{{- if .Values.orderService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.orderService.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "order-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.orderService.name }}
+spec:
+  replicas: {{ .Values.orderService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.orderService.name }}
+      {{- include "order-module.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.orderService.name }}
+        {{- include "order-module.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Values.orderService.name }}
+          image: {{ include "order-module.image" .Values.orderService.image }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.orderService.service.targetPort }}
+              protocol: TCP
+          {{- with .Values.orderService.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: app-config-volume
+              mountPath: {{ .Values.orderService.configMountPath }}/application.xml
+              subPath: application.xml
+              readOnly: true
+            - name: datasource-config-volume
+              mountPath: {{ .Values.orderService.configMountPath }}/datasource.properties
+              subPath: datasource.properties
+              readOnly: true
+            - name: datasource-config-volume
+              mountPath: {{ .Values.orderService.configMountPath }}/redis.properties
+              subPath: redis.properties
+              readOnly: true
+            - name: datasource-config-volume
+              mountPath: {{ .Values.orderService.configMountPath }}/mq.properties
+              subPath: mq.properties
+              readOnly: true
+            - name: datasource-config-volume
+              mountPath: {{ .Values.orderService.configMountPath }}/sharding.json
+              subPath: sharding.json
+              readOnly: true
+            - name: log-config-volume
+              mountPath: {{ .Values.orderService.configMountPath }}/log4j2.xml
+              subPath: log4j2.xml
+              readOnly: true
+            - name: log-config-volume
+              mountPath: {{ .Values.orderService.configMountPath }}/log.properties
+              subPath: log.properties
+              readOnly: true
+            - name: api-config-volume
+              mountPath: {{ .Values.orderService.configMountPath }}/api-exposure.xml
+              subPath: api-exposure.xml
+              readOnly: true
+            - name: protection-config-volume
+              mountPath: {{ .Values.orderService.configMountPath }}/overload-protection.json
+              subPath: overload-protection.json
+              readOnly: true
+          {{- if .Values.common.healthCheck.enabled }}
+          livenessProbe:
+            {{- toYaml .Values.common.healthCheck.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.common.healthCheck.readinessProbe | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.orderService.resources | nindent 12 }}
+      volumes:
+        - name: app-config-volume
+          configMap:
+            name: {{ .Values.orderService.name }}-app-config
+            defaultMode: 0644
+        - name: datasource-config-volume
+          configMap:
+            name: {{ .Values.orderService.name }}-datasource-config
+            defaultMode: 0644
+        - name: log-config-volume
+          configMap:
+            name: {{ .Values.orderService.name }}-log-config
+            defaultMode: 0644
+        - name: api-config-volume
+          configMap:
+            name: {{ .Values.orderService.name }}-api-config
+            defaultMode: 0644
+        - name: protection-config-volume
+          configMap:
+            name: {{ .Values.orderService.name }}-protection-config
+            defaultMode: 0644
+{{- end }}

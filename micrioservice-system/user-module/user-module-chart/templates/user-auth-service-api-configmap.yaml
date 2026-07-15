@@ -1,0 +1,27 @@
+{{- if .Values.userAuthService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.userAuthService.name }}-api-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "user-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.userAuthService.name }}
+    app.kubernetes.io/config-type: api
+data:
+  api-exposure.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <api-config>
+        <exposure>
+            <paths>
+                {{- range .Values.userAuthService.config.api.publicPaths }}
+                <path pattern="{{ . }}" enabled="true" authRequired="false"/>
+                {{- end }}
+            </paths>
+            <rate-limit qps="{{ .Values.userAuthService.config.api.rateLimitQps }}" threads="{{ .Values.userAuthService.config.api.rateLimitThreads }}"/>
+        </exposure>
+        <doc>
+            <knife4j enabled="true" title="认证服务API" version="1.0.0"/>
+        </doc>
+    </api-config>
+{{- end }}

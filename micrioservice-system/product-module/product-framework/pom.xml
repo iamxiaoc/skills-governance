@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.corp.dependency</groupId>
+        <artifactId>dependency-product</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../../base-dependency/dependency-product/pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.corp.product</groupId>
+    <artifactId>product-framework</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <description>商品模块framework，本应只放商品模块业务相关封装，但实际也混入了通用工具类和中间件管理库</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-spring</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-middleware</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    </dependencies>
+</project>

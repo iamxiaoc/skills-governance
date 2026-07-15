@@ -1,0 +1,45 @@
+{{- if .Values.hpa.enabled }}
+{{- if .Values.orderService.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.orderService.name }}-hpa
+  namespace: {{ .Values.global.namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.orderService.name }}
+  minReplicas: {{ .Values.hpa.orderService.minReplicas }}
+  maxReplicas: {{ .Values.hpa.orderService.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.hpa.orderService.targetCPUUtilizationPercentage }}
+---
+{{- end }}
+{{- if .Values.orderPaymentService.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.orderPaymentService.name }}-hpa
+  namespace: {{ .Values.global.namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.orderPaymentService.name }}
+  minReplicas: {{ .Values.hpa.orderPaymentService.minReplicas }}
+  maxReplicas: {{ .Values.hpa.orderPaymentService.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.hpa.orderPaymentService.targetCPUUtilizationPercentage }}
+{{- end }}
+{{- end }}

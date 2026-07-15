@@ -1,0 +1,82 @@
+# 开发环境配置覆盖
+global:
+  namespace: dev
+  imageRegistry: registry-dev.corp.com
+  imagePullPolicy: Always
+
+common:
+  replicas: 1
+
+userService:
+  replicaCount: 1
+  image:
+    tag: "1.0.0-SNAPSHOT"
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  env:
+    - name: JAVA_OPTS
+      value: "-Xms128m -Xmx256m -Dfile.encoding=UTF-8"
+    - name: SPRING_PROFILES_ACTIVE
+      value: "dev"
+  config:
+    db:
+      url: "jdbc:mysql://mysql-dev.default.svc.cluster.local:3306/user_db?useSSL=false&characterEncoding=utf8"
+      username: "user_app_dev"
+      password: "ENC(yyyyy)"
+    redis:
+      nodes: "redis-dev.default.svc.cluster.local:6379"
+    protection:
+      enabled: false
+      cpuThreshold: 90
+      memoryThreshold: 90
+      globalQps: 10000
+      perIpQps: 1000
+      perUserQps: 500
+
+userAuthService:
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+  config:
+    redis:
+      nodes: "redis-dev.default.svc.cluster.local:6379"
+    jwt:
+      secret: "ENC(yyyyy)"
+    crypto:
+      aesKey: "ENC(yyyyy)"
+    protection:
+      enabled: false
+      cpuThreshold: 90
+      memoryThreshold: 90
+      globalQps: 5000
+      perIpQps: 500
+      perUserQps: 200
+
+hpa:
+  enabled: false
+
+ingress:
+  enabled: true
+  hosts:
+    - host: user-api.dev.corp.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: user-service
+          servicePort: 8080
+    - host: auth-api.dev.corp.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: user-auth-service
+          servicePort: 8081

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.corp.dependency</groupId>
+        <artifactId>dependency-order</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../../base-dependency/dependency-order/pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.corp.order</groupId>
+    <artifactId>order-service</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <description>订单微服务</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.corp.order</groupId>
+            <artifactId>order-framework</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-middleware</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+        </dependency>
+        <!-- FIXME: 该依赖未通过base-dependency统一管理，微服务直接在pom中引入并自定义了版本号，存在版本不一致风险 -->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+        <!-- FIXME: 该依赖未通过base-dependency统一管理，微服务直接在pom中引入并自定义了版本号，存在版本不一致风险 -->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+            <version>2.2.3</version>
+        </dependency>
+    </dependencies>
+</project>

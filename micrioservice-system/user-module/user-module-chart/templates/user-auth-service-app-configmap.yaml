@@ -1,0 +1,31 @@
+{{- if .Values.userAuthService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.userAuthService.name }}-app-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "user-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.userAuthService.name }}
+    app.kubernetes.io/config-type: app
+data:
+  application.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <config>
+        <app name="user-auth-service" version="1.0.0">
+            <server port="{{ .Values.userAuthService.service.targetPort }}" context-path="/user-auth-service"/>
+            <thread-pool core="10" max="100" queue="500"/>
+        </app>
+        <jwt>
+            <secret>{{ .Values.userAuthService.config.jwt.secret }}</secret>
+            <expiration>{{ .Values.userAuthService.config.jwt.expiration }}</expiration>
+            <refresh-expiration>{{ .Values.userAuthService.config.jwt.refreshExpiration }}</refresh-expiration>
+            <issuer>{{ .Values.userAuthService.config.jwt.issuer }}</issuer>
+        </jwt>
+        <crypto>
+            <rsa public-key-path="/app/keys/rsa-public.pem"
+                 private-key-path="/app/keys/rsa-private.pem"/>
+            <aes key="{{ .Values.userAuthService.config.crypto.aesKey }}" mode="GCM"/>
+        </crypto>
+    </config>
+{{- end }}

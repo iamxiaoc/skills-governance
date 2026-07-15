@@ -1,0 +1,74 @@
+# 生产环境配置覆盖
+global:
+  namespace: prod
+  imageRegistry: registry.corp.com
+  imagePullPolicy: IfNotPresent
+
+common:
+  replicas: 4
+
+userService:
+  replicaCount: 4
+  image:
+    tag: "1.0.0"
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    - name: JAVA_OPTS
+      value: "-Xms512m -Xmx1536m -Dfile.encoding=UTF-8 -XX:+UseG1GC -XX:MaxGCPauseMillis=200"
+    - name: SPRING_PROFILES_ACTIVE
+      value: "prod"
+  config:
+    db:
+      url: "jdbc:mysql://mysql-prod.default.svc.cluster.local:3306/user_db?useSSL=true&characterEncoding=utf8"
+      username: "user_app_prod"
+      password: "ENC(zzzzz)"
+    redis:
+      nodes: "redis-prod.default.svc.cluster.local:6379"
+    protection:
+      enabled: true
+      cpuThreshold: 75
+      memoryThreshold: 80
+      globalQps: 8000
+      perIpQps: 200
+      perUserQps: 100
+
+userAuthService:
+  replicaCount: 3
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+  config:
+    redis:
+      nodes: "redis-prod.default.svc.cluster.local:6379"
+    jwt:
+      secret: "ENC(zzzzz)"
+    crypto:
+      aesKey: "ENC(zzzzz)"
+    protection:
+      enabled: true
+      cpuThreshold: 75
+      memoryThreshold: 80
+      globalQps: 3000
+      perIpQps: 100
+      perUserQps: 50
+
+hpa:
+  enabled: true
+  userService:
+    minReplicas: 4
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 65
+  userAuthService:
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 65

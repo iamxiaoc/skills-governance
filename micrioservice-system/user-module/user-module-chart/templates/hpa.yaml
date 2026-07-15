@@ -1,0 +1,45 @@
+{{- if .Values.hpa.enabled }}
+{{- if .Values.userService.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.userService.name }}-hpa
+  namespace: {{ .Values.global.namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.userService.name }}
+  minReplicas: {{ .Values.hpa.userService.minReplicas }}
+  maxReplicas: {{ .Values.hpa.userService.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.hpa.userService.targetCPUUtilizationPercentage }}
+---
+{{- end }}
+{{- if .Values.userAuthService.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.userAuthService.name }}-hpa
+  namespace: {{ .Values.global.namespace }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.userAuthService.name }}
+  minReplicas: {{ .Values.hpa.userAuthService.minReplicas }}
+  maxReplicas: {{ .Values.hpa.userAuthService.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.hpa.userAuthService.targetCPUUtilizationPercentage }}
+{{- end }}
+{{- end }}

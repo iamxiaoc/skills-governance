@@ -1,0 +1,67 @@
+{{- if .Values.userService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.userService.name }}-protection-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "user-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.userService.name }}
+    app.kubernetes.io/config-type: protection
+data:
+  overload-protection.json: |
+    {
+      "overloadProtection": {
+        "enabled": {{ .Values.userService.config.protection.enabled }},
+        "cpu": {
+          "threshold": {{ .Values.userService.config.protection.cpuThreshold }},
+          "rejectAction": "reject"
+        },
+        "memory": {
+          "threshold": {{ .Values.userService.config.protection.memoryThreshold }},
+          "rejectAction": "reject"
+        },
+        "rateLimit": {
+          "globalQps": {{ .Values.userService.config.protection.globalQps }},
+          "perIpQps": {{ .Values.userService.config.protection.perIpQps }},
+          "perUserQps": {{ .Values.userService.config.protection.perUserQps }}
+        },
+        "circuitBreaker": {
+          "enabled": true,
+          "failureThreshold": 50,
+          "failureRateThreshold": 0.5,
+          "waitDurationInOpenState": 30,
+          "slidingWindowSize": 100
+        },
+        "bulkhead": {
+          "enabled": true,
+          "maxConcurrentCalls": 200,
+          "maxWaitDuration": 5
+        }
+      }
+    }
+  security.json: |
+    {
+      "security": {
+        "filter": {
+          "enabled": true,
+          "excludePaths": ["/api/auth/login", "/actuator/health/**"],
+          "maxContentLength": 10485760
+        },
+        "xss": {
+          "enabled": {{ .Values.userService.config.security.xssEnabled }},
+          "replaceChar": ""
+        },
+        "fileUpload": {
+          "enabled": {{ .Values.userService.config.security.fileUploadEnabled }},
+          "maxFileSize": {{ .Values.userService.config.security.fileUploadMaxSize }},
+          "allowedExtensions": ["jpg", "png", "pdf", "xlsx"],
+          "scanContent": true
+        },
+        "fileDownload": {
+          "enabled": true,
+          "preventPathTraversal": true
+        }
+      }
+    }
+{{- end }}

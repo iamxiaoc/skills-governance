@@ -1,0 +1,175 @@
+# 全局配置
+global:
+  namespace: default
+  imageRegistry: registry.corp.com
+  imagePullPolicy: Always
+  imagePullSecrets:
+    - name: corp-registry-secret
+  storageClass: standard
+
+# 微服务通用配置
+common:
+  replicas: 2
+  healthCheck:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8080
+      initialDelaySeconds: 60
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 5
+
+# user-service 配置
+userService:
+  enabled: true
+  name: user-service
+  replicaCount: 2
+  image:
+    repository: registry.corp.com/user/user-service
+    tag: "1.0.0-SNAPSHOT"
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+  env:
+    - name: JAVA_OPTS
+      value: "-Xms256m -Xmx768m -Dfile.encoding=UTF-8"
+    - name: SPRING_PROFILES_ACTIVE
+      value: "prod"
+  configMountPath: /app/config
+  # 仅保留需要环境差异化的变量
+  config:
+    # 数据库
+    db:
+      url: "jdbc:mysql://mysql.default.svc.cluster.local:3306/user_db?useSSL=true&characterEncoding=utf8"
+      username: "user_app"
+      password: "ENC(xxxxx)"
+    # Redis
+    redis:
+      nodes: "redis.default.svc.cluster.local:6379"
+    # 接口暴露清单
+    api:
+      authRequiredPaths:
+        - "/api/users/**"
+      publicPaths:
+        - "/api/internal/**"
+        - "/actuator/**"
+      rateLimitQps: 1000
+      rateLimitThreads: 200
+    # 过载保护开关及阈值
+    protection:
+      enabled: true
+      cpuThreshold: 80
+      memoryThreshold: 85
+      globalQps: 5000
+      perIpQps: 100
+      perUserQps: 50
+    # 安全开关
+    security:
+      xssEnabled: true
+      fileUploadEnabled: true
+      fileUploadMaxSize: 10485760
+
+# user-auth-service 配置
+userAuthService:
+  enabled: true
+  name: user-auth-service
+  replicaCount: 2
+  image:
+    repository: registry.corp.com/user/user-auth-service
+    tag: "1.0.0-SNAPSHOT"
+  service:
+    type: ClusterIP
+    port: 8081
+    targetPort: 8081
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  env:
+    - name: JAVA_OPTS
+      value: "-Xms128m -Xmx384m -Dfile.encoding=UTF-8"
+    - name: SPRING_PROFILES_ACTIVE
+      value: "prod"
+  configMountPath: /app/config
+  config:
+    # Redis
+    redis:
+      nodes: "redis.default.svc.cluster.local:6379"
+    # JWT
+    jwt:
+      secret: "ENC(xxxxx)"
+      expiration: 3600
+      refreshExpiration: 604800
+      issuer: "corp-auth"
+    # 加密
+    crypto:
+      aesKey: "ENC(xxxxx)"
+    # 接口暴露清单
+    api:
+      publicPaths:
+        - "/api/auth/**"
+        - "/actuator/**"
+      rateLimitQps: 500
+      rateLimitThreads: 100
+    # 过载保护
+    protection:
+      enabled: true
+      cpuThreshold: 80
+      memoryThreshold: 85
+      globalQps: 2000
+      perIpQps: 50
+      perUserQps: 20
+    # 认证配置
+    auth:
+      loginMaxRetry: 5
+      lockDuration: 1800
+      captchaEnabled: true
+
+# Ingress 配置
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: user-api.corp.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: user-service
+          servicePort: 8080
+    - host: auth-api.corp.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: user-auth-service
+          servicePort: 8081
+
+# HPA 配置
+hpa:
+  enabled: true
+  userService:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+  userAuthService:
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70

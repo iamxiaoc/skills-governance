@@ -1,0 +1,105 @@
+# 全局配置
+global:
+  namespace: default
+  imageRegistry: registry.corp.com
+  imagePullPolicy: Always
+  imagePullSecrets:
+    - name: corp-registry-secret
+  storageClass: standard
+
+# 微服务通用配置
+common:
+  replicas: 2
+  healthCheck:
+    enabled: true
+    livenessProbe:
+      httpGet:
+        path: /actuator/health/liveness
+        port: 8080
+      initialDelaySeconds: 60
+      periodSeconds: 10
+    readinessProbe:
+      httpGet:
+        path: /actuator/health/readiness
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 5
+
+# product-service 配置
+productService:
+  enabled: true
+  name: product-service
+  replicaCount: 3
+  image:
+    repository: registry.corp.com/product/product-service
+    tag: "1.0.0-SNAPSHOT"
+  service:
+    type: ClusterIP
+    port: 8080
+    targetPort: 8080
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  env:
+    - name: JAVA_OPTS
+      value: "-Xms512m -Xmx1536m -Dfile.encoding=UTF-8"
+    - name: SPRING_PROFILES_ACTIVE
+      value: "prod"
+  configMountPath: /app/config
+  config:
+    db:
+      url: "jdbc:mysql://mysql.default.svc.cluster.local:3306/product_db?useSSL=true&characterEncoding=utf8"
+      username: "product_app"
+      password: "ENC(xxxxx)"
+    redis:
+      nodes: "redis.default.svc.cluster.local:6379"
+    es:
+      hosts: "https://es.default.svc.cluster.local:9200"
+      username: "elastic"
+      password: "ENC(xxxxx)"
+    oss:
+      endpoint: "http://minio.default.svc.cluster.local:9000"
+      accessKey: "product_access_key"
+      secretKey: "ENC(xxxxx)"
+    api:
+      authRequiredPaths:
+        - "/api/products/**"
+      publicPaths:
+        - "/api/products/search"
+        - "/api/internal/**"
+        - "/actuator/**"
+      rateLimitQps: 2000
+      rateLimitThreads: 500
+    protection:
+      enabled: true
+      cpuThreshold: 80
+      memoryThreshold: 85
+      globalQps: 8000
+      perIpQps: 200
+      perUserQps: 100
+
+# Ingress 配置
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: product-api.corp.com
+      paths:
+        - path: /
+          pathType: Prefix
+          serviceName: product-service
+          servicePort: 8080
+
+# HPA 配置
+hpa:
+  enabled: true
+  productService:
+    minReplicas: 3
+    maxReplicas: 15
+    targetCPUUtilizationPercentage: 65

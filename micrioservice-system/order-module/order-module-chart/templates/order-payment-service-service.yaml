@@ -1,0 +1,20 @@
+{{- if .Values.orderPaymentService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.orderPaymentService.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "order-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.orderPaymentService.name }}
+spec:
+  type: {{ .Values.orderPaymentService.service.type }}
+  ports:
+    - port: {{ .Values.orderPaymentService.service.port }}
+      targetPort: {{ .Values.orderPaymentService.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ .Values.orderPaymentService.name }}
+    {{- include "order-module.selectorLabels" . | nindent 4 }}
+{{- end }}

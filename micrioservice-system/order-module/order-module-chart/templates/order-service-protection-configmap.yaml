@@ -1,0 +1,43 @@
+{{- if .Values.orderService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.orderService.name }}-protection-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "order-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.orderService.name }}
+    app.kubernetes.io/config-type: protection
+data:
+  overload-protection.json: |
+    {
+      "overloadProtection": {
+        "enabled": {{ .Values.orderService.config.protection.enabled }},
+        "cpu": {
+          "threshold": {{ .Values.orderService.config.protection.cpuThreshold }},
+          "rejectAction": "reject"
+        },
+        "memory": {
+          "threshold": {{ .Values.orderService.config.protection.memoryThreshold }},
+          "rejectAction": "reject"
+        },
+        "rateLimit": {
+          "globalQps": {{ .Values.orderService.config.protection.globalQps }},
+          "perIpQps": {{ .Values.orderService.config.protection.perIpQps }},
+          "perUserQps": {{ .Values.orderService.config.protection.perUserQps }}
+        },
+        "circuitBreaker": {
+          "enabled": true,
+          "failureThreshold": 100,
+          "failureRateThreshold": 0.5,
+          "waitDurationInOpenState": 30,
+          "slidingWindowSize": 200
+        },
+        "bulkhead": {
+          "enabled": true,
+          "maxConcurrentCalls": 500,
+          "maxWaitDuration": 5
+        }
+      }
+    }
+{{- end }}

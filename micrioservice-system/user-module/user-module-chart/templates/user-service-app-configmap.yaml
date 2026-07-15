@@ -1,0 +1,32 @@
+{{- if .Values.userService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.userService.name }}-app-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "user-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.userService.name }}
+    app.kubernetes.io/config-type: app
+data:
+  application.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <config>
+        <app name="user-service" version="1.0.0">
+            <server port="{{ .Values.userService.service.targetPort }}" context-path="/user-service"/>
+            <thread-pool core="20" max="200" queue="1000"/>
+        </app>
+        <datasource>
+            <master url="{{ .Values.userService.config.db.url }}" username="{{ .Values.userService.config.db.username }}" password="{{ .Values.userService.config.db.password }}"
+                    driver="com.mysql.cj.jdbc.Driver"
+                    initialSize="5" maxActive="50" minIdle="5" maxWait="60000"/>
+        </datasource>
+        <redis>
+            <cluster nodes="{{ .Values.userService.config.redis.nodes }}" timeout="3000" maxAttempts="3"/>
+        </redis>
+        <mybatis>
+            <mapper-locations>classpath:mapper/*.xml</mapper-locations>
+            <config-location>classpath:mybatis-config.xml</config-location>
+        </mybatis>
+    </config>
+{{- end }}

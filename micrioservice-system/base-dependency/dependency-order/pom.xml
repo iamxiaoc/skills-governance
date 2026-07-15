@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        ============================================================
+        dependency-order 订单模块父 POM
+        ============================================================
+        职责：
+          1. 作为订单中心相关微服务的父 POM
+          2. 通过 dependencyManagement 管理订单模块特有依赖版本
+             （RocketMQ、XXL-Job、Seata 分布式事务等）
+          3. 通过 dependencies 提供订单模块微服务共同需要的基础依赖
+             （base-common / base-middleware / base-web）
+        说明：
+          - 继承自 dependency-public，复用公共依赖与版本管理
+        ============================================================
+    -->
+
+    <parent>
+        <groupId>com.corp.dependency</groupId>
+        <artifactId>dependency-public</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../dependency-public/pom.xml</relativePath>
+    </parent>
+
+    <groupId>com.corp.dependency</groupId>
+    <artifactId>dependency-order</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>dependency-order</name>
+    <description>订单模块微服务父 POM，管理订单中心特有依赖</description>
+
+    <!-- 订单模块特有依赖版本管理 -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- RocketMQ 消息队列 -->
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+                <version>${rocketmq.version}</version>
+            </dependency>
+
+            <!-- XXL-Job 分布式任务调度 -->
+            <dependency>
+                <groupId>com.xuxueli</groupId>
+                <artifactId>xxl-job-core</artifactId>
+                <version>${xxl-job.version}</version>
+            </dependency>
+
+            <!-- Seata 分布式事务 -->
+            <dependency>
+                <groupId>io.seata</groupId>
+                <artifactId>seata-spring-boot-starter</artifactId>
+                <version>2.0.0</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- 订单模块微服务共同需要的依赖 -->
+    <dependencies>
+        <!-- 通用基础 -->
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-common</artifactId>
+        </dependency>
+        <!-- 中间件封装（MQ、缓存等） -->
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-middleware</artifactId>
+        </dependency>
+        <!-- Web 基础封装 -->
+        <dependency>
+            <groupId>com.corp.base</groupId>
+            <artifactId>base-web</artifactId>
+        </dependency>
+        <!-- 分布式ID生成器二方件 -->
+        <dependency>
+            <groupId>com.corp.id</groupId>
+            <artifactId>corp-id-generator</artifactId>
+        </dependency>
+        <!-- 配置中心客户端二方件 -->
+        <dependency>
+            <groupId>com.corp.config</groupId>
+            <artifactId>corp-config-client</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

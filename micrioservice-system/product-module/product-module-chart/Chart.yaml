@@ -1,0 +1,11 @@
+apiVersion: v2
+name: product-module-chart
+description: 商品模块Helm Chart，包含product-service微服务
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - product
+  - microservice
+maintainers:
+  - name: corp-team

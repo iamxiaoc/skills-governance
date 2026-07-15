@@ -1,0 +1,47 @@
+{{- if .Values.productService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.productService.name }}-app-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "product-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.productService.name }}
+    app.kubernetes.io/config-type: app
+data:
+  application.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <config>
+        <app name="product-service" version="1.0.0">
+            <server port="{{ .Values.productService.service.targetPort }}" context-path="/product-service"/>
+            <thread-pool core="50" max="500" queue="2000"/>
+        </app>
+        <datasource>
+            <master url="{{ .Values.productService.config.db.url }}" username="{{ .Values.productService.config.db.username }}" password="{{ .Values.productService.config.db.password }}"
+                    driver="com.mysql.cj.jdbc.Driver"
+                    initialSize="10" maxActive="100" minIdle="10" maxWait="60000"/>
+        </datasource>
+        <redis>
+            <cluster nodes="{{ .Values.productService.config.redis.nodes }}" timeout="3000" maxAttempts="3"/>
+        </redis>
+        <elasticsearch>
+            <hosts>{{ .Values.productService.config.es.hosts }}</hosts>
+            <username>{{ .Values.productService.config.es.username }}</username>
+            <password>{{ .Values.productService.config.es.password }}</password>
+            <index product="product_index" alias="product_alias"/>
+            <connect-timeout>5000</connect-timeout>
+            <socket-timeout>30000</socket-timeout>
+        </elasticsearch>
+        <oss>
+            <provider>minio</provider>
+            <endpoint>{{ .Values.productService.config.oss.endpoint }}</endpoint>
+            <accessKey>{{ .Values.productService.config.oss.accessKey }}</accessKey>
+            <secretKey>{{ .Values.productService.config.oss.secretKey }}</secretKey>
+            <bucket>product-images</bucket>
+        </oss>
+        <mybatis>
+            <mapper-locations>classpath:mapper/*.xml</mapper-locations>
+            <config-location>classpath:mybatis-config.xml</config-location>
+        </mybatis>
+    </config>
+{{- end }}

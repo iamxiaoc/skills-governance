@@ -1,0 +1,43 @@
+{{- if .Values.orderPaymentService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.orderPaymentService.name }}-protection-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "order-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.orderPaymentService.name }}
+    app.kubernetes.io/config-type: protection
+data:
+  overload-protection.json: |
+    {
+      "overloadProtection": {
+        "enabled": {{ .Values.orderPaymentService.config.protection.enabled }},
+        "cpu": {
+          "threshold": {{ .Values.orderPaymentService.config.protection.cpuThreshold }},
+          "rejectAction": "reject"
+        },
+        "memory": {
+          "threshold": {{ .Values.orderPaymentService.config.protection.memoryThreshold }},
+          "rejectAction": "reject"
+        },
+        "rateLimit": {
+          "globalQps": {{ .Values.orderPaymentService.config.protection.globalQps }},
+          "perIpQps": {{ .Values.orderPaymentService.config.protection.perIpQps }},
+          "perUserQps": {{ .Values.orderPaymentService.config.protection.perUserQps }}
+        },
+        "circuitBreaker": {
+          "enabled": true,
+          "failureThreshold": 50,
+          "failureRateThreshold": 0.5,
+          "waitDurationInOpenState": 30,
+          "slidingWindowSize": 100
+        },
+        "bulkhead": {
+          "enabled": true,
+          "maxConcurrentCalls": 200,
+          "maxWaitDuration": 5
+        }
+      }
+    }
+{{- end }}

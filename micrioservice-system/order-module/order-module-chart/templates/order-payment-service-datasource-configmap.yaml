@@ -1,0 +1,36 @@
+{{- if .Values.orderPaymentService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.orderPaymentService.name }}-datasource-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "order-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.orderPaymentService.name }}
+    app.kubernetes.io/config-type: datasource
+data:
+  datasource.properties: |
+    # 数据源连接池配置（魔改HikariCP）
+    pool.name=PaymentDataSource
+    pool.maximum-pool-size=50
+    pool.minimum-idle=5
+    pool.connection-timeout=60000
+    pool.idle-timeout=300000
+    pool.max-lifetime=1200000
+    pool.connection-test-query=SELECT 1
+    monitor.slow-sql-threshold-millis=1000
+    monitor.log-slow-sql=true
+  payment.properties: |
+    # 支付配置
+    payment.timeout=1800
+    payment.max-amount=100000
+    payment.currency=CNY
+    # 退款配置
+    refund.timeout=3600
+    refund.max-times=3
+    # 支付宝配置
+    alipay.app-id={{ .Values.orderPaymentService.config.alipay.appId }}
+    alipay.charset=UTF-8
+    alipay.sign-type=RSA2
+    alipay.gateway={{ .Values.orderPaymentService.config.alipay.gateway }}
+{{- end }}

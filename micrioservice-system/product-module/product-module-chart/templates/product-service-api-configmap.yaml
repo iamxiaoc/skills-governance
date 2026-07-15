@@ -1,0 +1,30 @@
+{{- if .Values.productService.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.productService.name }}-api-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "product-module.labels" . | nindent 4 }}
+    app.kubernetes.io/component: {{ .Values.productService.name }}
+    app.kubernetes.io/config-type: api
+data:
+  api-exposure.xml: |
+    <?xml version="1.0" encoding="UTF-8"?>
+    <api-config>
+        <exposure>
+            <paths>
+                {{- range .Values.productService.config.api.authRequiredPaths }}
+                <path pattern="{{ . }}" enabled="true" authRequired="true"/>
+                {{- end }}
+                {{- range .Values.productService.config.api.publicPaths }}
+                <path pattern="{{ . }}" enabled="true" authRequired="false"/>
+                {{- end }}
+            </paths>
+            <rate-limit qps="{{ .Values.productService.config.api.rateLimitQps }}" threads="{{ .Values.productService.config.api.rateLimitThreads }}"/>
+        </exposure>
+        <doc>
+            <knife4j enabled="true" title="商品服务API" version="1.0.0"/>
+        </doc>
+    </api-config>
+{{- end }}
